@@ -1,0 +1,8 @@
+---
+
+- name: Network Getting Started First Playbook
+  hosts: prd-doc-01.home
+  tasks:
+    - name: Display the config
+      debug:
+        msg: "{{ ansible_facts }}"
