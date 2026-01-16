@@ -1,0 +1,27 @@
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: set-matrix
+        run: |
+          CUSTOMERS=$(git diff --name-only origin/main...HEAD \
+            | grep '^customers/' \
+            | cut -d/ -f2 \
+            | sort -u \
+            | jq -R -s -c 'split("\n")[:-1]')
+          echo "matrix=$CUSTOMERS" >> $GITHUB_OUTPUT
+
+  run:
+    needs: detect
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        customer: ${{ fromJson(needs.detect.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          ansible-playbook playbooks/zabbix_hosts.yml \
+            -e "customer=${{ matrix.customer }}"
